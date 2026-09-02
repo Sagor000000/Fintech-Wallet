@@ -13,12 +13,12 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    
+
     private final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    
+
     private final long JWT_EXPIRATION = 3600000;
 
-    
+
     public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
@@ -28,7 +28,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    
+
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -38,7 +38,7 @@ public class JwtUtil {
         return claimsResolver.apply(claims);
     }
 
-    
+
     public boolean isTokenValid(String token, String email) {
         final String extractedEmail = extractEmail(token);
         return (extractedEmail.equals(email) && !extractClaim(token, Claims::getExpiration).before(new Date()));

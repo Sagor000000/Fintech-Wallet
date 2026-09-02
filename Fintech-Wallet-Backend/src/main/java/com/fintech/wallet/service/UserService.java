@@ -28,7 +28,10 @@ public class UserService {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("This email is already registered! Please use a different email.");
         }
-        
+
+        user.setIsActive(true);
+        user.setIsKycVerified(false);
+
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         if (user.getTransactionPin() != null) {
             user.setTransactionPin(passwordEncoder.encode(user.getTransactionPin()));
@@ -38,23 +41,21 @@ public class UserService {
 
         Wallet newWallet = new Wallet();
         newWallet.setUser(savedUser);
+        newWallet.setCurrentBalance(new java.math.BigDecimal("1000.00"));
         walletRepository.save(newWallet);
 
         return savedUser;
     }
 
-    
     public String deactivateUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        
-        if (!user.isActive()) {
+        if (!Boolean.TRUE.equals(user.getIsActive())) {
             return "User is already deactivated!";
         }
 
-        
-        user.setActive(false);
+        user.setIsActive(false);
         userRepository.save(user);
 
         return "User account deactivated successfully!";
@@ -64,34 +65,28 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        
-        if (user.isActive()) {
+        if (Boolean.TRUE.equals(user.getIsActive())) {
             return "User account is already active!";
         }
 
-        
-        user.setActive(true);
+        user.setIsActive(true);
         userRepository.save(user);
 
         return "User account activated successfully!";
     }
 
-    
     public String loginUser(String email, String password) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with this email!"));
 
-        
-        if (!user.isActive()) {
+        if (!Boolean.TRUE.equals(user.getIsActive())) {
             throw new RuntimeException("Your account is deactivated. Please contact support.");
         }
 
-        
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new RuntimeException("Invalid Password!");
         }
 
-        
         return jwtUtil.generateToken(email);
     }
 }

@@ -35,5 +35,12 @@ public class User {
     private String role; 
 
     @Column(nullable = false)
-    private boolean isActive = true;
+    private Boolean isActive = true;
+
+    @Column(name = "is_kyc_verified")
+    private Boolean isKycVerified = false;
+
+    @Column(unique = true)
+    private String nid;
+
 }

@@ -16,16 +16,17 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-    
-    @PostMapping("/transfer")
-    public ResponseEntity<String> transferFunds(
-            @RequestParam Long senderWalletId,
-            @RequestParam Long receiverWalletId,
-            @RequestParam BigDecimal amount,
-            @RequestParam String category,
-            @RequestParam String pin){
 
-        String response = transactionService.transferFunds(senderWalletId, receiverWalletId, amount, category, pin);
+    @PostMapping("/transfer")
+    public ResponseEntity<String> transferFunds(@RequestBody com.fintech.wallet.dto.TransferRequestDto request) {
+
+        String response = transactionService.transferFunds(
+                request.getSenderWalletId(),
+                request.getReceiverWalletId(),
+                request.getAmount(),
+                request.getCategory(),
+                request.getPin()
+        );
         return ResponseEntity.ok(response);
     }
     
