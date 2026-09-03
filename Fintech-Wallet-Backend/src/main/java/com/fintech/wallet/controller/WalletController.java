@@ -3,20 +3,17 @@ package com.fintech.wallet.controller;
 import com.fintech.wallet.service.WalletService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/wallets")
+@RequiredArgsConstructor
 public class WalletController {
 
     private final WalletService walletService;
 
-    public WalletController(WalletService walletService) {
-        this.walletService = walletService;
-    }
-
-    
     @PostMapping("/{walletId}/deposit")
     public ResponseEntity<String> depositFunds(
             @PathVariable Long walletId,

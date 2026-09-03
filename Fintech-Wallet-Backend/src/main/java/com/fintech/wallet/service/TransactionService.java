@@ -4,32 +4,41 @@ import com.fintech.wallet.entity.Transaction;
 import com.fintech.wallet.entity.Wallet;
 import com.fintech.wallet.repository.TransactionRepository;
 import com.fintech.wallet.repository.WalletRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class TransactionService {
 
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public TransactionService(WalletRepository walletRepository, TransactionRepository transactionRepository, PasswordEncoder passwordEncoder) {
-        this.walletRepository = walletRepository;
-        this.transactionRepository = transactionRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
-
     @Transactional
     public String transferFunds(Long senderWalletId, Long receiverWalletId, BigDecimal amount, String category, String pin) {
 
         Wallet sender = walletRepository.findById(senderWalletId)
                 .orElseThrow(() -> new RuntimeException("Sender wallet not found!"));
+
+        transactionRepository.findTopBySenderWalletIdOrderByTimestampDesc(senderWalletId)
+                .ifPresent(lastTx -> {
+                    long secondsSinceLastTx = Duration.between(lastTx.getTimestamp(), LocalDateTime.now()).getSeconds();
+
+                    if (secondsSinceLastTx < 30
+                            && lastTx.getReceiverWallet().getId().equals(receiverWalletId)
+                            && lastTx.getAmount().compareTo(amount) == 0) {
+                        throw new RuntimeException("Duplicate Transaction! Please wait 30 seconds before sending again.");
+                    }
+                });
 
         // Security Check
         String loggedInUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -72,7 +81,7 @@ public class TransactionService {
         return "Transfer Successful!";
     }
 
-    public java.util.List<com.fintech.wallet.entity.Transaction> getTransactionHistory(Long walletId) {
+    public List<Transaction> getTransactionHistory(Long walletId) {
         return transactionRepository.findBySenderWalletIdOrReceiverWalletIdOrderByTimestampDesc(walletId, walletId);
     }
 }

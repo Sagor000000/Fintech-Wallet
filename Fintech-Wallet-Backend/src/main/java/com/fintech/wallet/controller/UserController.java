@@ -4,18 +4,15 @@ import com.fintech.wallet.entity.User;
 import com.fintech.wallet.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
 
 @RestController 
-@RequestMapping("/api/users") 
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User user) {
         User createdUser = userService.registerUser(user);

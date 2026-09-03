@@ -5,11 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    
-    
-    java.util.List<Transaction> findBySenderWalletIdOrReceiverWalletIdOrderByTimestampDesc(Long senderWalletId, Long receiverWalletId);
+    List<Transaction> findBySenderWalletIdOrReceiverWalletIdOrderByTimestampDesc(Long senderId, Long receiverId);
+    //block double click transaction
+    Optional<Transaction> findTopBySenderWalletIdOrderByTimestampDesc(Long senderWalletId);
 }

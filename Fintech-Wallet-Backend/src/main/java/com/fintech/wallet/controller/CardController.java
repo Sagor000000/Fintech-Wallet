@@ -1,5 +1,6 @@
 package com.fintech.wallet.controller;
 
+import com.fintech.wallet.dto.CardAddRequestDto;
 import com.fintech.wallet.entity.Card;
 import com.fintech.wallet.service.CardService;
 import org.springframework.http.ResponseEntity;
@@ -17,30 +18,28 @@ public class CardController {
         this.cardService = cardService;
     }
 
-    
     @PostMapping("/add")
-    public ResponseEntity<Card> addCard(
-            @RequestParam Long userId,
-            @RequestParam String cardType,
-            @RequestParam String fullCardNumber,
-            @RequestParam String expiryDate) {
+    public ResponseEntity<Card> addCard(@RequestBody CardAddRequestDto request) {
 
-        
-        if (fullCardNumber == null || fullCardNumber.length() < 16) {
+        if (request.getFullCardNumber() == null || request.getFullCardNumber().length() < 16) {
             throw new RuntimeException("Invalid Card Number! Must be at least 16 digits.");
         }
 
-        Card savedCard = cardService.addCard(userId, cardType, fullCardNumber, expiryDate);
+        Card savedCard = cardService.addCard(
+                request.getUserId(),
+                request.getCardType(),
+                request.getFullCardNumber(),
+                request.getExpiryDate()
+        );
         return ResponseEntity.ok(savedCard);
     }
 
-    
     @DeleteMapping("/{cardId}")
     public ResponseEntity<String> deleteCard(@PathVariable Long cardId) {
         String response = cardService.deleteCard(cardId);
         return ResponseEntity.ok(response);
     }
-    
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Card>> getUserCards(@PathVariable Long userId) {
         return ResponseEntity.ok(cardService.getUserCards(userId));

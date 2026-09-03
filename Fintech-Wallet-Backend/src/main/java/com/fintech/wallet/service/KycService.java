@@ -3,19 +3,18 @@ package com.fintech.wallet.service;
 import com.fintech.wallet.dto.KycRequestDto;
 import com.fintech.wallet.entity.User;
 import com.fintech.wallet.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-
+import lombok.RequiredArgsConstructor;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class KycService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public String verifyKyc(String email, KycRequestDto request) {
         Optional<User> userOptional = userRepository.findByEmail(email);

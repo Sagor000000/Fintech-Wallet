@@ -3,19 +3,15 @@ package com.fintech.wallet.service;
 import com.fintech.wallet.entity.Wallet;
 import com.fintech.wallet.repository.WalletRepository;
 import org.springframework.stereotype.Service;
-
+import lombok.RequiredArgsConstructor;
 import java.math.BigDecimal;
 
 @Service
+@RequiredArgsConstructor
 public class WalletService {
 
     private final WalletRepository walletRepository;
 
-    public WalletService(WalletRepository walletRepository) {
-        this.walletRepository = walletRepository;
-    }
-
-    
     public String depositFunds(Long walletId, BigDecimal amount) {
 
         

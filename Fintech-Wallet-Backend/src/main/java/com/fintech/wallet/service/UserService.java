@@ -5,23 +5,18 @@ import com.fintech.wallet.entity.Wallet;
 import com.fintech.wallet.repository.UserRepository;
 import com.fintech.wallet.repository.WalletRepository;
 import com.fintech.wallet.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository userRepository, WalletRepository walletRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.walletRepository = walletRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-    }
 
     public User registerUser(User user) {
 

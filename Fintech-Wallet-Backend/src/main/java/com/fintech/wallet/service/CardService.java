@@ -5,20 +5,16 @@ import com.fintech.wallet.entity.User;
 import com.fintech.wallet.repository.CardRepository;
 import com.fintech.wallet.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CardService {
 
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
-
-    public CardService(CardRepository cardRepository, UserRepository userRepository) {
-        this.cardRepository = cardRepository;
-        this.userRepository = userRepository;
-    }
-
     
     public Card addCard(Long userId, String cardType, String fullCardNumber, String expiryDate) {
         User user = userRepository.findById(userId)

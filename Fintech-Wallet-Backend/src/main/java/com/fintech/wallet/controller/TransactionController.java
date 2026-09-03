@@ -1,24 +1,23 @@
 package com.fintech.wallet.controller;
 
+import com.fintech.wallet.dto.TransferRequestDto;
+import com.fintech.wallet.entity.Transaction;
 import com.fintech.wallet.service.TransactionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/transactions")
+@RequiredArgsConstructor
 public class TransactionController {
 
     private final TransactionService transactionService;
 
-    public TransactionController(TransactionService transactionService) {
-        this.transactionService = transactionService;
-    }
-
-
     @PostMapping("/transfer")
-    public ResponseEntity<String> transferFunds(@RequestBody com.fintech.wallet.dto.TransferRequestDto request) {
+    public ResponseEntity<String> transferFunds(@RequestBody TransferRequestDto request) {
 
         String response = transactionService.transferFunds(
                 request.getSenderWalletId(),
@@ -29,10 +28,10 @@ public class TransactionController {
         );
         return ResponseEntity.ok(response);
     }
-    
+
     @GetMapping("/history/{walletId}")
-    public ResponseEntity<java.util.List<com.fintech.wallet.entity.Transaction>> getTransactionHistory(@PathVariable Long walletId) {
-        java.util.List<com.fintech.wallet.entity.Transaction> history = transactionService.getTransactionHistory(walletId);
+    public ResponseEntity<List<Transaction>> getTransactionHistory(@PathVariable Long walletId) {
+        List<Transaction> history = transactionService.getTransactionHistory(walletId);
         return ResponseEntity.ok(history);
     }
 }
