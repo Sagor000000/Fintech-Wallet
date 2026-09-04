@@ -5,6 +5,9 @@ import com.fintech.wallet.entity.Wallet;
 import com.fintech.wallet.repository.TransactionRepository;
 import com.fintech.wallet.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +28,16 @@ public class TransactionService {
     @Transactional
     public String transferFunds(Long senderWalletId, Long receiverWalletId, BigDecimal amount, String category, String pin) {
 
-        Wallet sender = walletRepository.findById(senderWalletId)
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Transfer amount must be greater than zero!");
+        }
+
+        if (senderWalletId.equals(receiverWalletId)) {
+            throw new RuntimeException("You cannot transfer money to your own wallet!");
+        }
+
+        // Concurrency Lock: findWalletForUpdateById ব্যবহার করা হলো
+        Wallet sender = walletRepository.findWalletForUpdateById(senderWalletId)
                 .orElseThrow(() -> new RuntimeException("Sender wallet not found!"));
 
         transactionRepository.findTopBySenderWalletIdOrderByTimestampDesc(senderWalletId)
@@ -40,18 +51,16 @@ public class TransactionService {
                     }
                 });
 
-        // Security Check
         String loggedInUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!sender.getUser().getEmail().equalsIgnoreCase(loggedInUserEmail)) {
             throw new RuntimeException("Security Error: You can't send money from someone else's account!");
         }
 
-        // KYC Verification Check
         if (!Boolean.TRUE.equals(sender.getUser().getIsKycVerified())) {
             throw new RuntimeException("Transaction Failed: You are not kyc verified! Please KYC verified before transferring.");
         }
 
-        Wallet receiver = walletRepository.findById(receiverWalletId)
+        Wallet receiver = walletRepository.findWalletForUpdateById(receiverWalletId)
                 .orElseThrow(() -> new RuntimeException("Receiver wallet not found!"));
 
         if (!passwordEncoder.matches(pin, sender.getUser().getTransactionPin())) {
@@ -81,7 +90,8 @@ public class TransactionService {
         return "Transfer Successful!";
     }
 
-    public List<Transaction> getTransactionHistory(Long walletId) {
-        return transactionRepository.findBySenderWalletIdOrReceiverWalletIdOrderByTimestampDesc(walletId, walletId);
+    public Page<Transaction> getTransactionHistory(Long walletId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return transactionRepository.findBySenderWalletIdOrReceiverWalletIdOrderByTimestampDesc(walletId, walletId, pageable);
     }
 }
