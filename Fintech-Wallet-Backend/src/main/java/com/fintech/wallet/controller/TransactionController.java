@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.fintech.wallet.service.AiInsightService;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final AiInsightService aiInsightService;
 
     @PostMapping("/transfer")
     public ResponseEntity<String> transferFunds(@RequestBody TransferRequestDto request) {
@@ -40,5 +42,10 @@ public class TransactionController {
     public ResponseEntity<String> verifyOtp(@RequestParam Long transactionId, @RequestParam String otp) {
         String response = transactionService.verifyTransferOtp(transactionId, otp);
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/insights/{walletId}")
+    public ResponseEntity<String> getSmartInsights(@PathVariable Long walletId) {
+        String advice = aiInsightService.generateFinancialAdvice(walletId);
+        return ResponseEntity.ok(advice);
     }
 }
