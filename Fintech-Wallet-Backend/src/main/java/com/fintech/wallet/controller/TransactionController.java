@@ -36,4 +36,9 @@ public class TransactionController {
         Page<Transaction> history = transactionService.getTransactionHistory(walletId, page, size);
         return ResponseEntity.ok(history);
     }
+    @PostMapping("/verify-otp")
+    public ResponseEntity<String> verifyOtp(@RequestParam Long transactionId, @RequestParam String otp) {
+        String response = transactionService.verifyTransferOtp(transactionId, otp);
+        return ResponseEntity.ok(response);
+    }
 }

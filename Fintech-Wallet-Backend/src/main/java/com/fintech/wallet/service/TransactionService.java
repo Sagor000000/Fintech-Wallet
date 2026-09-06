@@ -12,10 +12,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,8 @@ public class TransactionService {
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public String transferFunds(Long senderWalletId, Long receiverWalletId, BigDecimal amount, String category, String pin) {
@@ -36,7 +40,7 @@ public class TransactionService {
             throw new RuntimeException("You cannot transfer money to your own wallet!");
         }
 
-        // Concurrency Lock: findWalletForUpdateById ব্যবহার করা হলো
+        // Concurrency Lock
         Wallet sender = walletRepository.findWalletForUpdateById(senderWalletId)
                 .orElseThrow(() -> new RuntimeException("Sender wallet not found!"));
 
@@ -71,23 +75,90 @@ public class TransactionService {
             throw new RuntimeException("Insufficient Balance!");
         }
 
-        sender.setCurrentBalance(sender.getCurrentBalance().subtract(amount));
-        receiver.setCurrentBalance(receiver.getCurrentBalance().add(amount));
-
-        walletRepository.save(sender);
-        walletRepository.save(receiver);
 
         Transaction transaction = new Transaction();
         transaction.setSenderWallet(sender);
         transaction.setReceiverWallet(receiver);
         transaction.setAmount(amount);
-        transaction.setStatus("SUCCESS");
         transaction.setCategory(category);
         transaction.setTimestamp(LocalDateTime.now());
 
+        BigDecimal limit = new BigDecimal("10000");
+
+        if (amount.compareTo(limit) > 0) {
+
+            String otp = String.format("%06d", new Random().nextInt(1000000));
+            transaction.setStatus("PENDING");
+            transaction.setOtp(otp);
+            transaction.setOtpExpiry(LocalDateTime.now().plusMinutes(5)); // ৫ মিনিট মেয়াদ
+
+            transactionRepository.save(transaction);
+
+            emailService.sendOtpEmail(sender.getUser().getEmail(), otp, amount.toString());
+
+            return "Transaction requires OTP. Check your email. Transaction ID: " + transaction.getId();
+        } else {
+
+            sender.setCurrentBalance(sender.getCurrentBalance().subtract(amount));
+            receiver.setCurrentBalance(receiver.getCurrentBalance().add(amount));
+
+            walletRepository.save(sender);
+            walletRepository.save(receiver);
+
+            transaction.setStatus("SUCCESS");
+            transactionRepository.save(transaction);
+
+            messagingTemplate.convertAndSend("/topic/notifications/" + receiverWalletId,
+                    "You have received BDT " + amount + " from Wallet ID: " + senderWalletId);
+
+            return "Transfer Successful!";
+        }
+    }
+
+    @Transactional
+    public String verifyTransferOtp(Long transactionId, String otp) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found!"));
+
+        if (!"PENDING".equals(transaction.getStatus())) {
+            throw new RuntimeException("Transaction is not in PENDING state!");
+        }
+
+        if (transaction.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            transaction.setStatus("FAILED");
+            transactionRepository.save(transaction);
+            throw new RuntimeException("OTP has expired!");
+        }
+
+        if (!transaction.getOtp().equals(otp)) {
+            throw new RuntimeException("Invalid OTP!");
+        }
+
+        Wallet sender = transaction.getSenderWallet();
+        Wallet receiver = transaction.getReceiverWallet();
+
+
+        if (sender.getCurrentBalance().compareTo(transaction.getAmount()) < 0) {
+            transaction.setStatus("FAILED");
+            transactionRepository.save(transaction);
+            throw new RuntimeException("Insufficient Balance!");
+        }
+
+        sender.setCurrentBalance(sender.getCurrentBalance().subtract(transaction.getAmount()));
+        receiver.setCurrentBalance(receiver.getCurrentBalance().add(transaction.getAmount()));
+
+        walletRepository.save(sender);
+        walletRepository.save(receiver);
+
+        transaction.setStatus("SUCCESS");
+        transaction.setOtp(null);
+        transaction.setOtpExpiry(null);
         transactionRepository.save(transaction);
 
-        return "Transfer Successful!";
+        messagingTemplate.convertAndSend("/topic/notifications/" + receiver.getId(),
+                "You have received BDT " + transaction.getAmount() + " from Wallet ID: " + sender.getId());
+
+        return "OTP Verified! Transfer Successful!";
     }
 
     public Page<Transaction> getTransactionHistory(Long walletId, int page, int size) {

@@ -22,24 +22,25 @@ public class Transaction {
     @JoinColumn(name = "sender_wallet_id", nullable = false)
     private Wallet senderWallet;
 
-    
     @ManyToOne
     @JoinColumn(name = "receiver_wallet_id", nullable = false)
     private Wallet receiverWallet;
-
     
     @Column(nullable = false)
     private BigDecimal amount;
-
     
     @Column(nullable = false)
     private String status;
 
-    
     @Column
     private String category;
-
     
     @Column(nullable = false)
     private LocalDateTime timestamp;
+
+    @Column(name = "otp_code")
+    private String otp;
+
+    @Column(name = "otp_expiry")
+    private LocalDateTime otpExpiry;
 }
