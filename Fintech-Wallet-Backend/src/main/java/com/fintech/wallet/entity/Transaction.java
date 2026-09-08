@@ -2,6 +2,8 @@ package com.fintech.wallet.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fintech.wallet.enums.TransactionCategory;
+import com.fintech.wallet.enums.TransactionStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -29,11 +31,13 @@ public class Transaction {
     @Column(nullable = false)
     private BigDecimal amount;
     
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private TransactionStatus status;
 
+    @Enumerated(EnumType.STRING)
     @Column
-    private String category;
+    private TransactionCategory category;
     
     @Column(nullable = false)
     private LocalDateTime timestamp;

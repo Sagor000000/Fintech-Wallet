@@ -39,4 +39,10 @@ public class UserController {
         String token = userService.loginUser(loginRequest.email(), loginRequest.password());
         return ResponseEntity.ok(token);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<User> getCurrentUser() {
+        User user = userService.getCurrentUser();
+        return ResponseEntity.ok(user);
+    }
 }

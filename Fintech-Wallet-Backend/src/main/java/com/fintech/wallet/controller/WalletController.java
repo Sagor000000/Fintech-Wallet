@@ -1,5 +1,6 @@
 package com.fintech.wallet.controller;
 
+import com.fintech.wallet.entity.Wallet;
 import com.fintech.wallet.service.WalletService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,5 +22,11 @@ public class WalletController {
 
         String response = walletService.depositFunds(walletId, amount);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my-wallet")
+    public ResponseEntity<Wallet> getMyWallet() {
+        Wallet wallet = walletService.getCurrentUserWallet();
+        return ResponseEntity.ok(wallet);
     }
 }

@@ -3,6 +3,7 @@ package com.fintech.wallet.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fintech.wallet.enums.UserRole;
 
 @Entity
 @Table(name = "users")
@@ -31,8 +32,9 @@ public class User {
     @Column(nullable = true) 
     private String transactionPin;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role; 
+    private UserRole role;
 
     @Column(nullable = false)
     private Boolean isActive = true;

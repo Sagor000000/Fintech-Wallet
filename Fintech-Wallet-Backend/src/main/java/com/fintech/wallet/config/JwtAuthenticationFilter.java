@@ -1,5 +1,6 @@
 package com.fintech.wallet.config;
 
+import com.fintech.wallet.repository.UserRepository;
 import com.fintech.wallet.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,20 +10,23 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserRepository userRepository) {
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -46,8 +50,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (jwtUtil.isTokenValid(jwt, email)) {
+                com.fintech.wallet.entity.User applicationUser = userRepository.findByEmail(email).orElse(null);
 
-                UserDetails userDetails = new User(email, "", new ArrayList<>());
+                if (applicationUser == null
+                        || !Boolean.TRUE.equals(applicationUser.getIsActive())
+                        || applicationUser.getRole() == null) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                        email,
+                        "",
+                        List.of(new SimpleGrantedAuthority(
+                                "ROLE_" + applicationUser.getRole().name()
+                        ))
+                );
 
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());

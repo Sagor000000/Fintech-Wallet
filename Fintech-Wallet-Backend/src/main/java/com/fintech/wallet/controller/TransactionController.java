@@ -1,13 +1,15 @@
 package com.fintech.wallet.controller;
 
 import com.fintech.wallet.dto.TransferRequestDto;
+import com.fintech.wallet.dto.FinancialQuestionRequestDto;
+import com.fintech.wallet.dto.FinancialQuestionResponseDto;
 import com.fintech.wallet.entity.Transaction;
+import com.fintech.wallet.service.AiInsightService;
 import com.fintech.wallet.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.fintech.wallet.service.AiInsightService;
+import org.springframework.web.bind.annotation.*;;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -47,5 +49,13 @@ public class TransactionController {
     public ResponseEntity<String> getSmartInsights(@PathVariable Long walletId) {
         String advice = aiInsightService.generateFinancialAdvice(walletId);
         return ResponseEntity.ok(advice);
+    }
+
+    @PostMapping("/insights/{walletId}/ask")
+    public ResponseEntity<FinancialQuestionResponseDto> askFinancialQuestion(
+            @PathVariable Long walletId,
+            @RequestBody FinancialQuestionRequestDto request) {
+        FinancialQuestionResponseDto answer = aiInsightService.answerFinancialQuestion(walletId, request.getQuestion());
+        return ResponseEntity.ok(answer);
     }
 }

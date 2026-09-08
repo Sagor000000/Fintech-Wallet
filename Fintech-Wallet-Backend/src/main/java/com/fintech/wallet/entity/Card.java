@@ -2,6 +2,7 @@ package com.fintech.wallet.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fintech.wallet.enums.CardType;
 
 @Entity
 @Table(name = "cards")
@@ -21,8 +22,9 @@ public class Card {
     private User user;
 
     
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String cardType;
+    private CardType cardType;
 
     
     @Column(nullable = false, length = 4)
