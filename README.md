@@ -31,7 +31,7 @@ Welcome to the **Fintech Wallet** repository. This is a complete, full-stack dig
 * **Node.js** (v18 or higher)
 * **Java** (v17 or higher)
 * **Maven**
-* **PostgreSQL** or **MySQL** Server
+* **PostgreSQL** Server
 
 ## ⚙️ Setup & Installation
 
