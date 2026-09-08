@@ -13,7 +13,7 @@ Welcome to the **Fintech Wallet** repository. This is a complete, full-stack dig
 
 ### Backend
 * **Framework:** Java, Spring Boot (Spring Web, Spring Data JPA, Spring Security)
-* **Database:** PostgreSQL / MySQL
+* **Database:** PostgreSQL 
 * **Authentication:** JWT (JSON Web Tokens)
 * **AI Integration:** Spring AI / SDK Integration
 * **Build Tool:** Maven
